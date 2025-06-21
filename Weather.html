@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherCast Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a15b8186cb.js" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-bg: rgba(255, 255, 255, 0.1);
+            --primary-text: white;
+            --card-bg: rgba(0, 0, 0, 0.2);
+        }
+        
+        .dark {
+            --primary-bg: rgba(0, 0, 0, 0.3);
+            --primary-text: white;
+            --card-bg: rgba(0, 0, 0, 0.4);
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-size: cover;
+            background-position: center;
+            color: var(--primary-text);
+            transition: all 0.3s ease;
+        }
+        
+        .weather-card {
+            background: var(--primary-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .forecast-card {
+            background: var(--card-bg);
+        }
+        
+        /* Dynamic backgrounds */
+        .clear-sky {
+            background-image: url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fGNsZWFyJTIwc2t5fGVufDB8fHx8MTY4MjY0NzY5Nw&ixlib=rb-1.2.1&q=80&w=1080');
+        }
+        
+        .clouds {
+            background-image: url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fGNsZWFyJTIwc2t5fGVufDB8fHx8MTY4MjY0NzY5Nw&ixlib=rb-1.2.1&q=80&w=1080');
+        }
+        
+        .rain {
+            background-image: url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fGNsZWFyJTIwc2t5fGVufDB8fHx8MTY4MjY0NzY5Nw&ixlib=rb-1.2.1&q=80&w=1080');
+        }
+        
+        .thunderstorm {
+            background-image: url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fGNsZWFyJTIwc2t5fGVufDB8fHx8MTY4MjY0NzY5Nw&ixlib=rb-1.2.1&q=80&w=1080');
+        }
+        
+        .snow {
+            background-image: url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fGNsZWFyJTIwc2t5fGVufDB8fHx8MTY4MjY0NzY5Nw&ixlib=rb-1.2.1&q=80&w=1080');
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center px-4 py-8 clear-sky">
+    <div class="max-w-4xl w-full">
+        <div class="weather-card rounded-3xl shadow-xl p-8 relative">
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" class="absolute top-5 right-5 p-2 rounded-full hover:bg-white hover:bg-opacity-20">
+                <i id="theme-icon" class="fas fa-moon text-xl"></i>
+            </button>
+            
+            <h1 class="text-3xl font-bold mb-4 flex items-center gap-2">
+                <i class="fas fa-cloud-sun text-yellow-300"></i> WeatherCast Pro
+            </h1>
+
+            <!-- Location Controls -->
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                <form id="search-form" class="flex-1 flex gap-2">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Enter city name"
+                        class="flex-1 px-4 py-2 rounded-full bg-white bg-opacity-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                    >
+                    <button type="submit" class="px-4 py-2 bg-blue-500 rounded-full hover:bg-blue-600 transition">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+                <button id="locate-me" class="px-4 py-2 rounded-full bg-gray-600 hover:bg-gray-700 transition flex items-center gap-2">
+                    <i class="fas fa-location-arrow"></i> My Location
+                </button>
+            </div>
+
+            <!-- Current Weather -->
+            <div class="flex flex-col md:flex-row justify-between mb-8 gap-4" id="current-weather">
+                <div class="text-center md:text-left flex-1">
+                    <div class="flex items-center justify-center md:justify-start gap-2">
+                        <h2 class="text-2xl font-semibold" id="city">Enter a city</h2>
+                        <span id="loading-icon" class="animate-spin hidden"><i class="fas fa-circle-notch"></i></span>
+                    </div>
+                    <p class="text-gray-300" id="date">--</p>
+                    <div class="flex items-center justify-center md:justify-start mt-2 gap-2">
+                        <img id="weather-icon" src="https://openweathermap.org/img/wn/01d@2x.png" alt="Weather icon" width="60">
+                        <span class="text-5xl font-bold" id="temperature">--°C</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 flex-1">
+                    <div class="forecast-card p-3 rounded-lg">
+                        <p class="text-gray-300">Humidity</p>
+                        <p class="text-xl font-semibold" id="humidity">--%</p>
+                    </div>
+                    <div class="forecast-card p-3 rounded-lg">
+                        <p class="text-gray-300">Wind</p>
+                        <p class="text-xl font-semibold" id="wind">-- m/s</p>
+                    </div>
+                    <div class="forecast-card p-3 rounded-lg">
+                        <p class="text-gray-300">Condition</p>
+                        <p class="text-xl font-semibold" id="condition">--</p>
+                    </div>
+                    <div class="forecast-card p-3 rounded-lg">
+                        <p class="text-gray-300">Feels Like</p>
+                        <p class="text-xl font-semibold" id="feels-like">--°C</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5-Day Forecast -->
+            <h3 class="text-xl font-semibold mb-2">5-Day Forecast</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="forecast-container">
+                <!-- Forecast cards will be added dynamically -->
+                <div class="forecast-card rounded-lg p-3">
+                    <p class="font-medium">--</p>
+                    <img src="https://openweathermap.org/img/wn/01d.png" alt="Weather icon" class="mx-auto">
+                    <p class="font-semibold">--°C</p>
+                </div>
+                <div class="forecast-card rounded-lg p-3">
+                    <p class="font-medium">--</p>
+                    <img src="https://openweathermap.org/img/wn/01d.png" alt="Weather icon" class="mx-auto">
+                    <p class="font-semibold">--°C</p>
+                </div>
+                <div class="forecast-card rounded-lg p-3">
+                    <p class="font-medium">--</p>
+                    <img src="https://openweathermap.org/img/wn/01d.png" alt="Weather icon" class="mx-auto">
+                    <p class="font-semibold">--°C</p>
+                </div>
+                <div class="forecast-card rounded-lg p-3">
+                    <p class="font-medium">--</p>
+                    <img src="https://openweathermap.org/img/wn/01d.png" alt="Weather icon" class="mx-auto">
+                    <p class="font-semibold">--°C</p>
+                </div>
+                <div class="forecast-card rounded-lg p-3">
+                    <p class="font-medium">--</p>
+                    <img src="https://openweathermap.org/img/wn/01d.png" alt="Weather icon" class="mx-auto">
+                    <p class="font-semibold">--°C</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "1328884fcf486291b962876bb9c32b07"; // Your API key
+
+        const searchForm = document.getElementById("search-form");
+        const searchInput = document.getElementById("search-input");
+        const locateMeBtn = document.getElementById("locate-me");
+        const themeToggle = document.getElementById("theme-toggle");
+        const themeIcon = document.getElementById("theme-icon");
+        const loadingIcon = document.getElementById("loading-icon");
+        const body = document.body;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (localStorage.getItem("theme") === "dark") {
+                body.classList.add("dark");
+                themeIcon.classList.replace("fa-moon", "fa-sun");
+            }
+            fetchWeatherByCity("Delhi"); // Default city in India
+        });
+
+        themeToggle.addEventListener("click", () => {
+            body.classList.toggle("dark");
+            if (body.classList.contains("dark")) {
+                localStorage.setItem("theme", "dark");
+                themeIcon.classList.replace("fa-moon", "fa-sun");
+            } else {
+                localStorage.setItem("theme", "light");
+                themeIcon.classList.replace("fa-sun", "fa-moon");
+            }
+        });
+
+        searchForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const city = searchInput.value.trim();
+            if (!city) return;
+            fetchWeatherByCity(city);
+        });
+
+        locateMeBtn.addEventListener("click", getLocation);
+
+        function getLocation() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            loadingIcon.classList.remove("hidden");
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    fetchWeatherByCoords(position.coords.latitude, position.coords.longitude);
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    loadingIcon.classList.add("hidden");
+                    alert("Unable to get your location. Please search manually.");
+                }
+            );
+        }
+
+        async function fetchWeatherByCity(city) {
+            try {
+                loadingIcon.classList.remove("hidden");
+
+                const currentWeatherData = await fetchWeatherData(city);
+                updateCurrentWeather(currentWeatherData);
+
+                const forecastData = await fetchForecastData(city);
+                updateForecast(forecastData);
+
+                loadingIcon.classList.add("hidden");
+            } catch (error) {
+                loadingIcon.classList.add("hidden");
+                alert("City not found. Please check the spelling and try again.");
+                console.error(error);
+            }
+        }
+
+        async function fetchWeatherByCoords(lat, lon) {
+            try {
+                loadingIcon.classList.remove("hidden");
+
+                const currentWeatherData = await fetchWeatherDataByCoords(lat, lon);
+                updateCurrentWeather(currentWeatherData);
+
+                const forecastData = await fetchForecastDataByCoords(lat, lon);
+                updateForecast(forecastData);
+
+                loadingIcon.classList.add("hidden");
+            } catch (error) {
+                loadingIcon.classList.add("hidden");
+                alert("Unable to get weather for your location. Try searching manually.");
+                console.error(error);
+            }
+        }
+
+        async function fetchWeatherData(city) {
+            const response = await fetch(
+                `https://api.openweathermap.org/data/2.5/weather?q=${city},IN&appid=${API_KEY}&units=metric`
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error(`Error fetching weather data: ${errorData.message}`);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorData.message}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchForecastData(city) {
+            const response = await fetch(
+                `https://api.openweathermap.org/data/2.5/forecast?q=${city},IN&appid=${API_KEY}&units=metric`
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error(`Error fetching forecast data: ${errorData.message}`);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorData.message}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchWeatherDataByCoords(lat, lon) {
+            const response = await fetch(
+                `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error(`Error fetching weather data by coordinates: ${errorData.message}`);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorData.message}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchForecastDataByCoords(lat, lon) {
+            const response = await fetch(
+                `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error(`Error fetching forecast data by coordinates: ${errorData.message}`);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorData.message}`);
+            }
+            return await response.json();
+        }
+
+        function updateCurrentWeather(data) {
+            document.getElementById("city").textContent = data.name; // City name
+            document.getElementById("temperature").textContent = `${Math.round(data.main.temp)}°C`; // Current temperature
+            document.getElementById("humidity").textContent = `${data.main.humidity}%`; // Humidity
+            document.getElementById("wind").textContent = `${Math.round(data.wind.speed)} m/s`; // Wind speed
+            document.getElementById("condition").textContent = data.weather[0].main; // Weather condition
+            document.getElementById("feels-like").textContent = `${Math.round(data.main.feels_like)}°C`; // Feels like temperature
+
+            const iconCode = data.weather[0].icon; // Weather icon code
+            document.getElementById("weather-icon").src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`; // Set icon
+
+            updateBackground(data.weather[0].main.toLowerCase()); // Update background based on weather condition
+
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById("date").textContent = now.toLocaleDateString("en-US", options); // Current date
+        }
+
+        function updateForecast(data) {
+            const forecastContainer = document.getElementById("forecast-container");
+            forecastContainer.innerHTML = "";
+
+            const dailyForecasts = data.list.filter(item => item.dt_txt.includes("12:00:00"));
+
+            for (let i = 0; i < 5; i++) {
+                const forecast = dailyForecasts[i];
+                if (!forecast) break;
+
+                const date = new Date(forecast.dt * 1000);
+                const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+
+                const forecastCard = document.createElement("div");
+                forecastCard.className = "forecast-card rounded-lg p-3";
+
+                forecastCard.innerHTML = `
+                    <p class="font-medium">${dayName}</p>
+                    <img src="https://openweathermap.org/img/wn/${forecast.weather[0].icon}.png" alt="Weather icon" class="mx-auto">
+                    <p class="font-semibold">${Math.round(forecast.main.temp)}°C</p>
+                `;
+
+                forecastContainer.appendChild(forecastCard);
+            }
+        }
+
+        function updateBackground(weatherCondition) {
+            body.classList.remove("clear-sky", "clouds", "rain", "thunderstorm", "snow");
+
+            if (weatherCondition.includes("clear")) {
+                body.classList.add("clear-sky");
+            } else if (weatherCondition.includes("cloud")) {
+                body.classList.add("clouds");
+            } else if (weatherCondition.includes("rain") || weatherCondition.includes("drizzle")) {
+                body.classList.add("rain");
+            } else if (weatherCondition.includes("thunder")) {
+                body.classList.add("thunderstorm");
+            } else if (weatherCondition.includes("snow")) {
+                body.classList.add("snow");
+            }
+        }
+    </script>
+    </body>
+    </html>
